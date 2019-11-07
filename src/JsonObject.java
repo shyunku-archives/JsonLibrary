@@ -67,8 +67,8 @@ public class JsonObject {
         keys = arrayBundle.keySet().iterator();
         while(keys.hasNext()){
             String key = (String)keys.next();
-            result += tool.toStringFormat(key) +":"+arrayBundle.get(key);
-            result += ",";
+            result += tool.toStringFormat(key) +":"+arrayBundle.get(key).getString();
+            if(keys.hasNext()) result += ",";
         }
 
         keys = objectBundle.keySet().iterator();

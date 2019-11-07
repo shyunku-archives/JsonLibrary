@@ -23,8 +23,6 @@ public abstract class JsonFormattable<gene> {
 
                 typeName = getTypeWithoutGeneric(typeName);
 
-                System.out.println("type : "+typeName);
-
                 switch(typeName){
                     case stringType:
                         String string__ = (String) field.get(this);

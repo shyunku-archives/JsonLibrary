@@ -7,16 +7,16 @@ public class Test {
         JsonObject head = new JsonObject();
         JsonObject data = new JsonObject();
         ArrayList<Person> people = new ArrayList<>();
-        Person per = new Person("John", 23, true);
-        data.put("pers", per.toJson("a"));
-       // people.add(new Person("Terry", 16, false));
+        people.add(new Person("John", 23, true));
+        people.add(new Person("Terry", 16, false));
 
+        JsonArray peopler = new JsonArray("people", people);
 
-
-
+        data.put("array", peopler);
         body.put("data", data);
         total.put("head", head);
         total.put("body", body);
+        System.out.println(total.getString());
         System.out.println(total.getPrettyString());
     }
 }
