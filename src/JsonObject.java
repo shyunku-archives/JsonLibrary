@@ -1,91 +1,102 @@
-import javax.lang.model.type.NullType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 
 public class JsonObject {
-    private HashMap<String, String> stringBundle = new HashMap<>();
-    private HashMap<String, Integer> intBundle = new HashMap<>();
-    private HashMap<String, Double> doubleBundle = new HashMap<>();
-    private HashMap<String, Boolean> boolBundle = new HashMap<>();
-    private HashMap<String, JsonArray> arrayBundle = new HashMap<>();
-    private HashMap<String, JsonObject> objectBundle = new HashMap<>();
+    private LinkedHashMap<String, Object> dataBundle = new LinkedHashMap<>();
 
-    public void put(String key, String data){
-        stringBundle.put(key, data);
-    }
-
-    public void put(String key, int data){
-        intBundle.put(key, data);
-    }
-
-    public void put(String key, double data){
-        doubleBundle.put(key, data);
-    }
-
-    public void put(String key, boolean data){
-        boolBundle.put(key, data);
-    }
-
-    public void put(String key, JsonArray data){
-        arrayBundle.put(key, data);
-    }
-
-    public void put(String key, JsonObject data){
-        objectBundle.put(key, data);
+    public void put(String key, Object data){
+        dataBundle.put(key, data);
     }
 
     public String getString(){
-        String result = "{";
-        Iterator<String> keys = stringBundle.keySet().iterator();
+        StringBuilder result = new StringBuilder("{");
+        Iterator<String> keys = dataBundle.keySet().iterator();
         while(keys.hasNext()){
-            String key = (String)keys.next();
-            result += tool.toStringFormat(key) +":"+tool.toStringFormat(stringBundle.get(key));
-            result += ",";
-        }
+            Object object = keys.next();
+            String key = (String)object;
+            Object val = dataBundle.get(key);
+            Class class_ = val.getClass();
+            String typeName = class_.getTypeName();
 
-        keys = intBundle.keySet().iterator();
-        while(keys.hasNext()){
-            String key = (String)keys.next();
-            result += tool.toStringFormat(key) +":"+intBundle.get(key);
-            result += ",";
-        }
+            //System.out.println("key : "+key+", type : "+typeName);
 
-        keys = doubleBundle.keySet().iterator();
-        while(keys.hasNext()){
-            String key = (String)keys.next();
-            result += tool.toStringFormat(key) +":"+doubleBundle.get(key);
-            result += ",";
+            switch(typeName){
+                case JsonEngine.stringType:
+                    result.append(e.toStringFormat(key))
+                            .append(":")
+                            .append(e.toStringFormat(
+                                    getObjectString(String.class, val)
+                            ));
+                    break;
+                case JsonEngine.intType:
+                    result.append(e.toStringFormat(key))
+                            .append(":")
+                            .append(
+                                    getObjectString(Integer.class, val)
+                            );
+                    break;
+                case JsonEngine.doubleType:
+                    result.append(e.toStringFormat(key))
+                            .append(":")
+                            .append(
+                                    getObjectString(Double.class, val)
+                            );
+                    break;
+                case JsonEngine.boolType:
+                    result.append(e.toStringFormat(key))
+                            .append(":")
+                            .append(
+                                    getObjectString(Boolean.class, val)
+                            );
+                    break;
+                case JsonEngine.JsonArrayType:
+                    e.print("aagh");
+                    result.append(e.toStringFormat(key))
+                            .append(":")
+                            .append(((JsonArray)val).getString());
+                    break;
+                case JsonEngine.JsonObjectType:
+                    result.append(e.toStringFormat(key))
+                            .append(":")
+                            .append(((JsonObject) val).getString());
+                    break;
+                default:
+                    e.print("Default type : "+typeName);
+                    Class<?> superclass = class_.getSuperclass();
+                    if(superclass.getTypeName().equals("JsonFormattable")) {
+                        JsonFormattable format = (JsonFormattable) val;
+                        result.append(e.toStringFormat(key))
+                                .append(":")
+                                .append(format.toJson().getString());
+                    }else{
+                        if(e.isIterableClass(class_)){
+                            JsonArray array = new JsonArray(key, (Iterable)val);
+                            result.append(e.toStringFormat(key))
+                                    .append(":")
+                                    .append(array.getString());
+                        }else{
+                            //can't handle this (not supported)
+                        }
+                    }
+            }
+            if(keys.hasNext()) result.append(",");
         }
+        result.append("}");
 
-        keys = boolBundle.keySet().iterator();
-        while(keys.hasNext()){
-            String key = (String)keys.next();
-            result += tool.toStringFormat(key) +":"+boolBundle.get(key);
-            result += ",";
-        }
+        return result.toString();
+    }
 
-        keys = arrayBundle.keySet().iterator();
-        while(keys.hasNext()){
-            String key = (String)keys.next();
-            result += tool.toStringFormat(key) +":"+arrayBundle.get(key).getString();
-            if(keys.hasNext()) result += ",";
-        }
-
-        keys = objectBundle.keySet().iterator();
-        while(keys.hasNext()){
-            String key = (String)keys.next();
-            JsonObject json = objectBundle.get(key);
-            result += tool.toStringFormat(key) +":"+json.getString();
-            result += ",";
-        }
-        result += "}";
-
-        return result;
+    public <type> String getObjectString(Class<type> typeClass, Object object){
+        type obj = typeClass.cast(object);
+        return obj.toString();
     }
 
     public String getPrettyString(){
-        return tool.toPrettyFormat(getString());
+        return e.toPrettyFormat(getString());
     }
 
-    private JsonTool tool = new JsonTool();
+    private JsonEngine e = new JsonEngine();
 }

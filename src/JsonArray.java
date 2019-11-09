@@ -1,60 +1,42 @@
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 public class JsonArray<type> {
-    private final String stringType = "java.lang.String";
-    private final String intType = "int";
-    private final String doubleType = "double";
-    private final String boolType = "boolean";
-    private final String listType = "java.util.ArrayList";
-    private final String JsonObjectType = "JsonObject";
-
     private String key = "";
-    private ArrayList<type> typeList;
+    private Iterable<type> typeList;
 
-    public JsonArray(String key, ArrayList<type> list){
+    public JsonArray(String key, Iterable<type> list){
         this.key = key;
-        this.typeList = (ArrayList<type>)list.clone();
+        this.typeList = (Iterable<type>)list;
     }
 
     public String getString(){
-        String generic = typeList.get(0).getClass().getTypeName();
+        Iterator<type> iter_temp = typeList.iterator();
+        String generic = null;
+        if(iter_temp.hasNext())generic = iter_temp.next().getClass().getTypeName();
 
         String result = "[";
         Iterator<type> iter = typeList.iterator();
         while(iter.hasNext()){
             type t = (type) iter.next();
             switch(generic){
-                case stringType:
+                case JsonEngine.stringType:
                     result += "\""+(String)t+"\"";
                     break;
-                case intType:
+                case JsonEngine.intType:
                     result += (Integer)t;
                     break;
-                case doubleType:
+                case JsonEngine.doubleType:
                     result += (Double)t;
                     break;
-                case boolType:
+                case JsonEngine.boolType:
                     result += (Boolean)t;
                     break;
-                case listType:
-                    ArrayList<?> list__ = (ArrayList<?>) t;
-                    if(!list__.isEmpty()) {
-                        result += new JsonArray<>("array", list__).getString();
-                    }
-                    break;
-                case JsonObjectType:
+                case JsonEngine.JsonObjectType:
                     result += ((JsonObject)t).getString();
                     break;
                 default:
-                    String className = typeList.get(0).getClass().getTypeName();
-                    Class<?> superclass = typeList.get(0).getClass().getSuperclass();
-
-                    if(superclass.getTypeName().equals("JsonFormattable")) {
-                        JsonFormattable format = (JsonFormattable) t;
-                        result += format.toJson(className).getString();
-                    }
+                    break;
             }
             if(iter.hasNext())result+=",";
         }
@@ -63,5 +45,5 @@ public class JsonArray<type> {
         return result;
     }
 
-    private JsonTool tool = new JsonTool();
+    private JsonEngine e = new JsonEngine();
 }
